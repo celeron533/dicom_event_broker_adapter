@@ -17,6 +17,17 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      mosquitto:
+        image: eclipse-mosquitto:2.0
+        ports:
+          - 1883:1883
+        options: >-
+          --health-cmd "mosquitto_sub -t test/topic -C 1 -E -v || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
@@ -61,6 +72,21 @@ jobs:
         # --extend-ignore=203 because black puts in a space before a slicing :
         # while flake8 complains (this warning is not PEP 8 compliant), If W503 pops up, that should be disabled also
         poetry run flake8 --count --extend-ignore=E203 --max-line-length=127 --statistics dicom_event_broker_adapter
-    - name: Test with pytest
+    - name: Create and copy Mosquitto config
       run: |
-        poetry run pytest tests
+        CONTAINER_ID=$(docker ps -q --filter "ancestor=eclipse-mosquitto:2.0")
+        docker exec ${CONTAINER_ID} sh -c "mkdir -p /mosquitto/config"
+        docker cp ${{ github.workspace }}/tests/config/mosquitto.conf ${CONTAINER_ID}:/mosquitto/config/
+        docker exec ${CONTAINER_ID} ls -la /mosquitto/config/
+        docker exec ${CONTAINER_ID} cat /mosquitto/config/mosquitto.conf
+        # Restart mosquitto to use the new config
+        docker exec ${CONTAINER_ID} sh -c "pkill mosquitto || true"
+        docker exec ${CONTAINER_ID} sh -c "mosquitto -c /mosquitto/config/mosquitto.conf -d"
+
+    - name: Run unit tests with pytest
+      run: |
+        poetry run pytest tests --ignore=tests/test_mqtt_integration.py
+
+    - name: Run integration tests with real Mosquitto
+      run: |
+        poetry run pytest tests/test_mqtt_integration.py -v

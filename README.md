@@ -1,5 +1,5 @@
 # dicom_event_broker_adapter
-Adapter between DICOM UPS Watch and Event and Event Brokers, such as mosquitto and solace (at this point, any MQTT broker supporting 3.1.1)
+Adapter between DICOM UPS Watch and Event and Event Brokers, such as Mosquitto and Solace (at this point, any MQTT broker supporting 3.1.1)
 
 The first adapter is for DIMSE and MQTT over TCP using python.
 
@@ -8,6 +8,51 @@ Future adapters will hopefully include adaptation for DICOM Web (UPS-RS) and to 
 ## Installation
 
     poetry install
+
+## Testing
+
+### Unit Tests
+
+Run the unit tests with:
+
+    poetry run pytest tests --ignore=tests/test_mqtt_integration.py
+
+### Integration Tests
+
+Integration tests require a running Mosquitto MQTT broker. You can run these tests by:
+
+1. Start the Mosquitto broker:
+
+    ```
+    ./scripts/run_mosquitto.sh start
+    ```
+
+    The script will try to use:
+    - An existing Mosquitto broker if one is already running on port 1883
+    - Docker to run Mosquitto in a container
+    - A locally installed Mosquitto if Docker is not available
+
+2. Run the integration tests:
+
+    ```
+    poetry run pytest tests/test_mqtt_integration.py -v
+    ```
+
+3. Stop the Mosquitto broker when done:
+
+    ```
+    ./scripts/run_mosquitto.sh stop
+    ```
+
+4. Check Mosquitto status:
+
+    ```
+    ./scripts/run_mosquitto.sh status
+    ```
+
+If Mosquitto is running, the following command will execute all tests (both unit and integration). If Mosquitto is not running, only the unit tests will be executed:
+
+    poetry run pytest tests
 
 ## Command-Line Interface
 
