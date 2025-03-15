@@ -4,8 +4,10 @@ Common fixtures and utilities for tests.
 
 import json
 import logging
+import signal
 import socket
 import subprocess
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -141,9 +143,6 @@ def mock_dcmread(request):
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_zombie_processes():
     """Ensure any leftover processes are cleaned up after tests."""
-    import os
-    import signal
-    import threading
 
     # Create a flag for cleanup timeout
     cleanup_completed = threading.Event()
@@ -154,6 +153,8 @@ def cleanup_zombie_processes():
             print("WARNING: Cleanup timed out, forcing exit")
             # Just return as pytest will handle cleanup after this fixture
             return
+
+    import os  # without this, even though it was imported at the top, unbound error
 
     # By default, skip stopping Mosquitto between tests to avoid interruptions
     # Set STOP_MOSQUITTO=true to force stop Mosquitto after tests
@@ -207,8 +208,7 @@ def cleanup_zombie_processes():
                                 # Force kill if still alive
                                 if process.is_alive():
                                     print(f"Process {process.name} did not terminate gracefully, force killing...")
-                                    import os
-                                    import signal
+                                    import os  # without this, even if imported at the top unbound error on os.kill
 
                                     try:
                                         os.kill(process.pid, signal.SIGKILL)
