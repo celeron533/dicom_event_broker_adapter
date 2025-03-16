@@ -21,8 +21,15 @@ repos:
 
       - id: ruff-format
         types: [python]
-  - repo: https://github.com/floatingpurr/sync_with_poetry
-    rev: 1.2.0
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.6.6
     hooks:
-      - id: sync_with_poetry
-        args: [] # optional args
+      - id: uv-lock
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.6.6
+    hooks:
+      - id: uv-export
