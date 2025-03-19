@@ -15,6 +15,9 @@ on:
 jobs:
   run-claude-code:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # This allows writing to the repository (creating commits/branches)
+      pull-requests: write  # This allows creating PRs
     environment: ClaudeCodeFixes
     # Only run when issues contain the "ai-fix" label or on manual dispatch
     if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.issue.labels.*.name, 'ai-fix') }}
@@ -24,6 +27,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # This is important for operations that need git history
+
+      - name: Setup GitHub credentials for PR creation
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
       - name: Set up environment
         run: |
