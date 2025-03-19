@@ -97,6 +97,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           prompt: ${{ inputs.prompt }}
+          prompt-file: "/dev/null"
           acknowledge-dangerously-skip-permissions-responsibility: "true"
 
       # Comment on issue with Claude's response
