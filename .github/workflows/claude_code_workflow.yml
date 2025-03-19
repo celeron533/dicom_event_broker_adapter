@@ -1,0 +1,85 @@
+name: Claude Code Assistant
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Prompt for Claude Code'
+        required: true
+      file_path:
+        description: 'Path to file to analyze (optional)'
+        required: false
+
+jobs:
+  run-claude-code:
+    runs-on: ubuntu-latest
+    # Only run when issues contain the "ai-fix" label or on manual dispatch
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.issue.labels.*.name, 'ai-fix') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up environment
+        run: |
+          echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" >> $GITHUB_ENV
+
+      # For issue events
+      - name: Prepare prompt from issue
+        if: github.event_name == 'issues'
+        run: |
+          echo "PROMPT=$(echo '${{ github.event.issue.body }}' | sed 's/"/\\"/g')" >> $GITHUB_ENV
+          echo "Analyzing issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
+
+      # For manual workflow dispatch
+      - name: Prepare file content (if provided)
+        if: github.event_name == 'workflow_dispatch' && inputs.file_path != ''
+        run: |
+          if [ -f "${{ inputs.file_path }}" ]; then
+            cat "${{ inputs.file_path }}" > prompt_file.txt
+            echo "FILE_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "File not found: ${{ inputs.file_path }}"
+            echo "FILE_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      # Run Claude Code with input from issue
+      - name: Run Claude Code (issue)
+        if: github.event_name == 'issues'
+        uses: ${{ github.repository_owner }}/claude-code-action@main
+        with:
+          prompt: ${{ env.PROMPT }}
+          acknowledge-dangerously-skip-permissions-responsibility: "true"
+
+      # Run Claude Code with manual input
+      - name: Run Claude Code (manual with file)
+        if: github.event_name == 'workflow_dispatch' && env.FILE_EXISTS == 'true'
+        uses: ${{ github.repository_owner }}/claude-code-action@main
+        with:
+          prompt: ${{ inputs.prompt }}
+          prompt-file: prompt_file.txt
+          acknowledge-dangerously-skip-permissions-responsibility: "true"
+
+      - name: Run Claude Code (manual without file)
+        if: github.event_name == 'workflow_dispatch' && (env.FILE_EXISTS != 'true' || inputs.file_path == '')
+        uses: ${{ github.repository_owner }}/claude-code-action@main
+        with:
+          prompt: ${{ inputs.prompt }}
+          acknowledge-dangerously-skip-permissions-responsibility: "true"
+
+      # Comment on issue with Claude's response
+      - name: Comment on issue
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const result = process.env.CLAUDE_RESULT || 'Claude did not provide a response';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Claude Code Response\n\n${result}`
+            });
