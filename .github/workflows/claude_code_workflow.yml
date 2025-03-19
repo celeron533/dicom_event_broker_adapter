@@ -73,6 +73,8 @@ jobs:
           # github.repository_owner failed for some reason, only static strings for uses?
         # uses: ${{ github.repository_owner }}/claude-code-action@main
         uses: sjswerdloff/claude-code-action@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           prompt: ${{ env.PROMPT }}
           acknowledge-dangerously-skip-permissions-responsibility: "true"
@@ -81,6 +83,8 @@ jobs:
       - name: Run Claude Code (manual with file)
         if: github.event_name == 'workflow_dispatch' && env.FILE_EXISTS == 'true'
         uses: sjswerdloff/claude-code-action@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           prompt: ${{ inputs.prompt }}
           prompt-file: prompt_file.txt
@@ -89,6 +93,8 @@ jobs:
       - name: Run Claude Code (manual without file)
         if: github.event_name == 'workflow_dispatch' && (env.FILE_EXISTS != 'true' || inputs.file_path == '')
         uses: sjswerdloff/claude-code-action@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           prompt: ${{ inputs.prompt }}
           acknowledge-dangerously-skip-permissions-responsibility: "true"
