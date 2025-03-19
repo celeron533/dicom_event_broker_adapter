@@ -45,9 +45,17 @@ jobs:
       - name: Prepare prompt from issue
         if: github.event_name == 'issues'
         run: |
-          echo 'PROMPT<<EOF' >> $GITHUB_ENV
-          echo '${{ github.event.issue.body }}' >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          # Store the title for reference
+          echo "ISSUE_TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
+          echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
+
+          # Use GitHub's special delimiter syntax for multi-line values
+          cat << 'PROMPTDELIMITER' >> $GITHUB_ENV
+          PROMPT<<ENDOFPROMPT
+          ${{ toJSON(github.event.issue.body) }}
+          ENDOFPROMPT
+          PROMPTDELIMITER
+
           echo "Analyzing issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
 
       # For manual workflow dispatch
