@@ -15,8 +15,11 @@ on:
 jobs:
   run-claude-code:
     runs-on: ubuntu-latest
+    environment: ClaudeCodeFixes
     # Only run when issues contain the "ai-fix" label or on manual dispatch
     if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.issue.labels.*.name, 'ai-fix') }}
+    env:
+      REPO_OWNER: ${{ github.repository_owner }}
 
     steps:
       - name: Checkout repository
@@ -55,7 +58,9 @@ jobs:
       # Run Claude Code with input from issue
       - name: Run Claude Code (issue)
         if: github.event_name == 'issues'
-        uses: ${{ github.repository_owner }}/claude-code-action@main
+          # github.repository_owner failed for some reason, only static strings for uses?
+        # uses: ${{ github.repository_owner }}/claude-code-action@main
+        uses: sjswerdloff/claude-code-action@main
         with:
           prompt: ${{ env.PROMPT }}
           acknowledge-dangerously-skip-permissions-responsibility: "true"
@@ -63,7 +68,7 @@ jobs:
       # Run Claude Code with manual input
       - name: Run Claude Code (manual with file)
         if: github.event_name == 'workflow_dispatch' && env.FILE_EXISTS == 'true'
-        uses: ${{ github.repository_owner }}/claude-code-action@main
+        uses: sjswerdloff/claude-code-action@main
         with:
           prompt: ${{ inputs.prompt }}
           prompt-file: prompt_file.txt
@@ -71,7 +76,7 @@ jobs:
 
       - name: Run Claude Code (manual without file)
         if: github.event_name == 'workflow_dispatch' && (env.FILE_EXISTS != 'true' || inputs.file_path == '')
-        uses: ${{ github.repository_owner }}/claude-code-action@main
+        uses: sjswerdloff/claude-code-action@main
         with:
           prompt: ${{ inputs.prompt }}
           acknowledge-dangerously-skip-permissions-responsibility: "true"
