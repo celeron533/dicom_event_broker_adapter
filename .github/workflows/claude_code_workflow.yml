@@ -38,6 +38,13 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.file_path != ''
         run: |
           if [ -f "${{ inputs.file_path }}" ]; then
+            echo "File exists: '${{ inputs.file_path }}'. Preparing file content..."
+            # Place any additional file processing logic here.
+          else
+            echo "ERROR: The file '${{ inputs.file_path }}' does not exist!"
+            exit 1
+          fi
+          if [ -f "${{ inputs.file_path }}" ]; then
             cat "${{ inputs.file_path }}" > prompt_file.txt
             echo "FILE_EXISTS=true" >> $GITHUB_ENV
           else
