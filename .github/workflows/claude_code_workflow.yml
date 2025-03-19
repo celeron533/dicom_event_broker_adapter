@@ -2,7 +2,7 @@ name: Claude Code Assistant
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, labeled]
   workflow_dispatch:
     inputs:
       prompt:
