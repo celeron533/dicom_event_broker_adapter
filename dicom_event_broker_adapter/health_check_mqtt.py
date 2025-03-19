@@ -223,12 +223,11 @@ class MQTTHealthChecker:
             # Check if the server socket is still active
             if self.dimse_server and hasattr(self.dimse_server, "socket") and self.dimse_server.socket:
                 self.health_status.update_dimse_status("healthy")
+            elif self.dimse_server:
+                logger.warning("DIMSE server socket is not active")
+                self.health_status.update_dimse_status("error")
             else:
-                if self.dimse_server:
-                    logger.warning("DIMSE server socket is not active")
-                    self.health_status.update_dimse_status("error")
-                else:
-                    self.health_status.update_dimse_status("unknown")
+                self.health_status.update_dimse_status("unknown")
 
             # Publish DIMSE-specific status
             dimse_status = {"status": self.health_status.dimse_status, "timestamp": time.time(), "node_id": self.node_id}
