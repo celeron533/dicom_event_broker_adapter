@@ -125,7 +125,7 @@ jobs:
         if: github.event_name == 'issues'
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CLAUDE_CODE_FIX_PR_PAT }}
           script: |
             const result = process.env.CLAUDE_RESULT || 'Claude did not provide a response';
             github.rest.issues.createComment({
