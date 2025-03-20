@@ -23,6 +23,8 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.issue.labels.*.name, 'ai-fix') }}
     env:
       REPO_OWNER: ${{ github.repository_owner }}
+      # Make the PAT available to the action
+      CLAUDE_CODE_FIX_PR_PAT: ${{ secrets.CLAUDE_CODE_FIX_PR_PAT }}
 
     steps:
       - name: Checkout repository
