@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # This is important for operations that need git history
@@ -44,7 +44,7 @@ jobs:
           echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" >> $GITHUB_ENV
 
       - name: Save issue body to file
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         # Write the issue body directly to a file
         # complex issue content blows up when put in the environment
         # and when placed on a command line
@@ -57,19 +57,18 @@ jobs:
 
       # For issue events
       - name: Prepare prompt from issue
-        if: github.event_name == 'issues'
-        run: |
-          # Store the title for reference
-          echo "ISSUE_TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
-          echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
 
+        if: github.event_name == 'issues'
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
           # put the issue title and number in the prompt
           echo "PROMPT<<EOF" >> $GITHUB_ENV
           echo "${{ github.event.issue.number }}" >> $GITHUB_ENV
-          echo "${{ github.event.issue.title }}" >> $GITHUB_ENV
+          echo "$ISSUE_TITLE" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-          echo "Analyzing issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
+          echo "Analyzing issue #${{ github.event.issue.number }}: $ISSUE_TITLE"
 
       # For manual workflow dispatch
       - name: Prepare file content (if provided)
@@ -124,7 +123,7 @@ jobs:
       # Comment on issue with Claude's response
       - name: Comment on issue
         if: github.event_name == 'issues'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
